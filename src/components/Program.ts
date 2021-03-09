@@ -1,13 +1,6 @@
 import { Loader } from "./loader/Loader";
 import { PCB } from "./pcb/PCB";
 
-enum FileName {
-  FILE_0 = 'zad0.txt',
-  FILE_1 = 'zad1.txt',
-  FILE_2 = 'zad2.txt',
-  FILE_3 = 'zad2.txt',
-}
-
 class Program {
   static data: string;
 
