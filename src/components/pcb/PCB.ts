@@ -1,4 +1,5 @@
 import { CircuitBoard } from "./CircuitBoard";
+import { GA } from "../ga/GA";
 
 export class PCB {
   static circuitBoard: CircuitBoard;
@@ -19,5 +20,7 @@ export class PCB {
 
   static solve() {
     console.log("SOLVING...");
+    const ga = new GA();
+    ga.createPopulation();
   }
 }

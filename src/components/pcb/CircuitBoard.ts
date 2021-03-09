@@ -1,5 +1,5 @@
-type Point = { x: number, y: number };
-type Connection = [Point, Point];
+import { linkSync } from "fs";
+import { BOX_SIZE } from "../../config/constant";
 
 export class CircuitBoard {
   private width: number;
@@ -12,6 +12,18 @@ export class CircuitBoard {
     this.connections = [];
   }
 
+  getWidth() {
+    return this.width;
+  }
+
+  getHeight() {
+    return this.height;
+  }
+
+  getConnections() {
+    return this.connections;
+  }
+
   setSize(width: number, height: number) {
     this.width = width;
     this.height = height;
@@ -22,7 +34,11 @@ export class CircuitBoard {
   }
  
   vizualize() {
-    const squareSize = 20;
+    const squareSize = BOX_SIZE;
+    const lines = [
+      { x: 1, y: 1, len: 4, orientation: 'ver'},
+      { x: 1, y: 1, len: 2, orientation: 'hor'}
+    ]
     const container = document.getElementById('circuit-board');
     container.innerHTML = '';
     const board = document.createElement('div');
@@ -33,7 +49,6 @@ export class CircuitBoard {
     board.style.maxWidth = (squareSize * this.width).toString() + 'px';
     board.style.minHeight = (squareSize * this.height).toString() + 'px';
     board.style.maxHeight = (squareSize * this.height).toString() + 'px';
-   
     for(let y = 0; y < this.height; y++) {
       for(let x = 0; x < this.width; x++) {
         const connectionPoint = this.connections.find(c => 
@@ -50,6 +65,8 @@ export class CircuitBoard {
         board.appendChild(point);
       }
     }
+
+   
     container.appendChild(board);
   }
 }
@@ -81,3 +98,4 @@ function createConnectionPoint(size: number, index: number) {
   point.appendChild(circle);
   return point;
 }
+

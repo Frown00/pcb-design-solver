@@ -7,6 +7,7 @@ body {
 }
 
 .board {
+  position: relative;
   background-color: lightgoldenrodyellow;
   /* display: inline-grid; */
   /* grid-template-columns: 1fr 1fr 1fr; */
@@ -45,11 +46,11 @@ body {
 }
 
 .line {
-  position: relative;
-  top: -75px;
-  left: 25px;
-  transform: rotate(90deg);
+  position: absolute;
+  /* left: 10px; */
+  /* transform: rotate(90deg); */
   border: 1px solid #66F;
+  background-color: #66F;
   border-radius: 10%;
-  width: 100px;
+  /* width: 40px; */
 }
