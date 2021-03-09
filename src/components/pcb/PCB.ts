@@ -15,7 +15,6 @@ export class PCB {
       const point2 = { x: parseInt(connection[2]), y: parseInt(connection[3]) };
       PCB.circuitBoard.setConnection(point1, point2);
     }
-    console.log(PCB.circuitBoard);
   }
 
   static solve() {
