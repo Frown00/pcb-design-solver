@@ -1,8 +1,7 @@
-import { Dir } from "fs";
 import { BOX_SIZE } from "../../config/constant";
 import { PCB } from "../pcb/PCB";
 import { randomDirection } from "./mechanic";
-import { isSamePoint } from "./util";
+import { isSamePoint, removePoint } from "./util";
 
 export enum Direction {
   UP = "up",
@@ -16,9 +15,15 @@ type Chromosom = { start: Point, end: Point, path: Segment[] };
 
 export class Individual {
   private genotype: Chromosom[];
+  private fitness: number;
+  private intersections: number;
 
   constructor() {
     this.genotype = [];
+  }
+
+  getFitness() {
+    return this.fitness;
   }
 
   generateRandom() {
@@ -45,7 +50,7 @@ export class Individual {
         );
         forbidden.push(getOppositeDirection(direction));
         direction = randomDirection(forbidden);
-        this.moveInDirection(currentPoint, direction);
+        currentPoint = this.moveInDirection(currentPoint, direction, 1);
         let lastDirection = null;
         if(chromosom.path.length > 0) {
           lastDirection = chromosom.path[chromosom.path.length - 1][0];
@@ -61,13 +66,35 @@ export class Individual {
     return this;
   }
 
-  private moveInDirection(point: Point, direction: Direction) {
-    switch(direction) {
-      case Direction.UP: point.y -= 1;break;
-      case Direction.DOWN: point.y += 1;break;
-      case Direction.LEFT: point.x -= 1;break;
-      case Direction.RIGHT: point.x += 1;break;
+  countFitness() {
+    let pathLength = 0;
+    let segmentsCount = 0;
+    this.intersections = this.countIntersections();
+    for(let i = 0; i < this.genotype.length; i++) {
+      const chromosom = this.genotype[i];
+      segmentsCount += chromosom.path.length;
+      for(let j = 0; j < chromosom.path.length; j++) {
+        const segment = chromosom.path[j];
+        const len = segment[1];
+        pathLength += len;
+      }
     }
+    // console.log('PATH LENGTH: ', pathLength);
+    // console.log('SEGMENT COUNT: ', segmentsCount);
+    // console.log('INTERSECTIONS: ', intersections);
+    this.fitness = pathLength + segmentsCount * 2 + this.intersections * 100;
+    return this.fitness;
+  }
+
+  private moveInDirection(point: Point, direction: Direction, move: number): Point {
+    const newPoint = { x: point.x, y: point.y };
+    switch(direction) {
+      case Direction.UP: newPoint.y -= move;break;
+      case Direction.DOWN: newPoint.y += move;break;
+      case Direction.LEFT: newPoint.x -= move;break;
+      case Direction.RIGHT: newPoint.x += move;break;
+    }
+    return newPoint;
   }
 
   private getForbiddenDirections(
@@ -83,10 +110,42 @@ export class Individual {
     return forbidden; 
   }
 
-  vizualize() {
-    const board = document.querySelector('.board');
+  private countIntersections() {
+    let points: Point[] = [];
     for(let i = 0; i < this.genotype.length; i++) {
-      const position = { ...this.genotype[i].start };
+      const chromosom = this.genotype[i];
+      let position = { ...chromosom.start };
+      points.push(chromosom.start);
+      for(let j = 0; j < chromosom.path.length; j++) {
+        const segment = chromosom.path[j];
+        const direction = segment[0];
+        const len = segment[1];
+        for(let m = 0; m < len; m++) {
+          position = this.moveInDirection(position, direction, 1);
+          points.push({ ...position });
+        }
+      }
+    }
+    let intersections = 0;
+    while(points.length > 0) {
+      const same = points.filter(p => p.x === points[0].x && p.y === points[0].y);
+      if(same.length > 1) {
+        intersections++;
+      }
+      points = removePoint(points, same[0]);
+    }
+    return intersections;
+  }
+
+  vizualize() {
+    console.log('GENOTYPE:', this.genotype);
+    const container = document.querySelector('#circuit-board');
+    const board = document.querySelector('.board');
+    const text = document.createElement('p');
+    text.innerText = `Fitness: ${this.fitness}\nIntersections: ${this.intersections}`;
+    container.appendChild(text);
+    for(let i = 0; i < this.genotype.length; i++) {
+      let position = { ...this.genotype[i].start };
       for(let j = 0; j < this.genotype[i].path.length; j++) {
         const segment = this.genotype[i].path[j];
         const line = getLine(position, segment);
@@ -98,10 +157,8 @@ export class Individual {
           const lineHTML = addHorizontalLine(BOX_SIZE, line);
           board.appendChild(lineHTML);
         }
-        for(let i = 0; i < segment[1]; i++)
-          this.moveInDirection(position, segment[0]);
+        position = this.moveInDirection(position, segment[0], segment[1]);
       }
-        
     }
   }
 }
