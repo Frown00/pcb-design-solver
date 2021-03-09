@@ -45,13 +45,13 @@ app.on('activate', () => {
 });
 
 // const filepath = path.join(__dirname, '.', 'test-data/zad0.txt');
-async function loadFile() {
-  const data = dialog.showOpenDialog({
-    filters: [{ name: 'Text', extensions: ['txt']}],
-    properties: ['openFile']
-  });
-  console.log(data);
-}
+// async function loadFile() {
+//   const data = dialog.showOpenDialog({
+//     filters: [{ name: 'Text', extensions: ['txt']}],
+//     properties: ['openFile']
+//   });
+//   console.log(data);
+// }
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
