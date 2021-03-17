@@ -1,22 +1,37 @@
-import { Individual } from "../individual/Individual";
+import { CircuitBoard } from "../pcb/circuitBoard/model";
+import { IndividualController } from "./individual/controller";
+import { IndividualModel } from "./individual/model";
 
 export class GA {
   private params: any;
+  private cboard: CircuitBoard;
+  private controller: IndividualController;
+  private population: IndividualModel[];
+
+  constructor(cboard: CircuitBoard) {
+    this.cboard = cboard;
+    this.controller = new IndividualController();
+    this.population = [];
+  }
 
   createPopulation() {
-    const population: Individual[] = [];
-    for(let i = 0; i < 10; i++) {
-      const individual = new Individual().generateRandom();
-      individual.countFitness();
-      population.push(individual);
+    const width = this.cboard.getWidth();
+    const height = this.cboard.getHeight();
+    const connections = this.cboard.getConnections();
+    for(let i = 0; i < 1; i++) {
+      const individual = this.controller.generateRandom(width, height, connections);
+      this.population.push(individual);
     }
-    let best = population[0];
-    for(let i = 1; i < population.length; i++) {
-      if(population[i].getFitness() < best.getFitness()) {
-        best = population[i];
+  }
+
+  paint() {
+    let best = this.population[0];
+    for(let i = 1; i < this.population.length; i++) {
+      if(this.population[i].getFitness() < best.getFitness()) {
+        best = this.population[i];
       }
     }
-    console.log("FITNESS:", best.getFitness());
-    best.vizualize();
+    const container = document.getElementById('circuit-board');
+    this.controller.paint(best, container);
   }
 }
