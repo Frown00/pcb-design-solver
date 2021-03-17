@@ -27,5 +27,5 @@
  */
 
 import './index.css';
-import * as program from './components/Program';
-program.listenActions();
+import * as actions from './components/program/actions';
+actions.listen();
