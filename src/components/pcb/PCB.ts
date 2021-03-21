@@ -1,4 +1,5 @@
 import { GA } from "../ga/GA";
+import { IGAParams } from "../ga/types";
 import { CircuitBoardController } from "./circuitBoard/controller";
 import { CircuitBoard } from "./circuitBoard/model";
 
@@ -15,13 +16,18 @@ export class PCB {
   }
 
   paint() {
+    const progress = document.getElementById('progress') as HTMLProgressElement;
+    progress.value = 0;
     const container = document.getElementById('circuit-board');
     this.controller.paint(this.circuitBoard, container);
   }
 
-  solve() {
+  solve(params: IGAParams) {
     console.log("SOLVING...");
-    const ga = new GA(this.circuitBoard);
+    const progress = document.getElementById('progress') as HTMLProgressElement;
+    progress.value = 0;
+    const ga = new GA(this.circuitBoard, params);
+    ga.paintParams();
     ga.createPopulation();
     ga.paint();
   }

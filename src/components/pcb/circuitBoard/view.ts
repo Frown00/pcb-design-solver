@@ -1,5 +1,5 @@
-import { TouchBarOtherItemsProxy } from "electron";
 import { BOX_SIZE } from "../../../config/constant";
+import * as types from "../types";
 
 export class CircuitBoardView {
   private container: HTMLElement;
@@ -20,7 +20,7 @@ export class CircuitBoardView {
     return board;
   }
 
-  createPoints(width: number, height: number, connections: Connection[]) {
+  createPoints(width: number, height: number, connections: types.Connection[]) {
     const points = [];
     for(let y = 0; y < height; y++) {
       for(let x = 0; x < width; x++) {

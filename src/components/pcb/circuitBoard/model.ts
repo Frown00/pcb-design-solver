@@ -1,7 +1,9 @@
+import * as types from "../types";
+
 export class CircuitBoard {
   private width: number;
   private height: number;
-  private connections: Connection[];
+  private connections:types.Connection[];
 
   constructor() {
     this.width = 0;
@@ -26,7 +28,7 @@ export class CircuitBoard {
     this.height = height;
   }
 
-  setConnection(point1: Point, point2: Point) {
+  setConnection(point1: types.Point, point2: types.Point) {
     this.connections.push([point1, point2]);
   }
 }

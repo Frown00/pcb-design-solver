@@ -1,8 +1,17 @@
 
+import * as types from '../../pcb/types';
+
 export class IndividualModel {
   private genotype: Chromosom[];
   private fitness: number;
-  private intersectionCount: number;
+  private stats: {
+    pathTotal: number;
+    intersections: number;
+    segments: number;
+  }
+  private intersections: number;
+  private pathLength: number;
+
 
   getFitness() {
     return this.fitness;
@@ -42,6 +51,6 @@ export type Line = {
   orientation: Orientation 
 };
 
-export type Segment = [Direction, Length];
-export type Chromosom = { start: Point, end: Point, path: Segment[] };
+export type Segment = types.Point;
+export type Chromosom = { start: types.Point, end: types.Point, path: Segment[] };
 type Length = number;
