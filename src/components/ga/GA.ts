@@ -3,9 +3,17 @@ import { IndividualController } from "./individual/controller";
 import { IndividualModel } from "./individual/model";
 import { IGAParams } from "./types";
 import _ from "lodash";
+import { Report } from "./report/report";
+
+export enum SelectionType {
+  TOURNAMENT = 'tournament',
+  ROULETTE = 'roulette'
+}
 
 const defaultParams: IGAParams = {
   generations: 10,
+  selectionType: SelectionType.TOURNAMENT,
+  tournamentRivals: 5,
   populationSize: 100,
   crossingProb: 50,
   mutationProb: 50,
@@ -21,6 +29,7 @@ export class GA {
   private cboard: CircuitBoard;
   private controller: IndividualController;
   private population: IndividualModel[];
+  private bestSolution: IndividualModel[];
 
   constructor(cboard: CircuitBoard, params: IGAParams) {
     this.cboard = cboard;
@@ -47,6 +56,20 @@ export class GA {
       // this.repaintProgress(progress);
       console.log(progress + '%');
     }
+    return this.population;
+  }
+
+  evolve(report: Report) {
+    const stats = this.population.map(p => p.getFitness());
+    report.addGeneration(1, stats);
+    for(let i = 2; i <= this.params.generations; i++) {
+      // newPop = selection(this.population)
+      // crossover(newPop)
+      // mutation(newPop)
+      // this.population = newPop;
+      // report.addGeneration(i, stats);
+    }
+    console.log(report);
   }
 
   paint() {
@@ -75,6 +98,8 @@ export class GA {
     d1.appendChild(main);
     d1.innerHTML+= `<label>Generations</label><span>${this.params.generations}</span>
       <label>Population size</label><span>${this.params.populationSize}</span>
+      <label>Selection type</label><span>${this.params.selectionType}</span>
+      <label>Tournament Rivals</label><span>${this.params.tournamentRivals}</span>
       <label>Crossing prob.</label><span>${this.params.crossingProb}%</span>
       <label>Mutation prob.</label><span>${this.params.mutationProb}%</span>
     `
