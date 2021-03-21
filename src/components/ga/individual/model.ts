@@ -7,11 +7,16 @@ export class IndividualModel {
   private stats: {
     pathTotal: number;
     intersections: number;
-    segments: number;
+    segmentsCount: number;
   }
-  private intersections: number;
-  private pathLength: number;
 
+  setStats(intersections: number, pathTotal: number, segmentsCount: number) {
+    this.stats = { intersections, pathTotal, segmentsCount}
+  }
+
+  getStats() {
+    return this.stats;
+  }
 
   getFitness() {
     return this.fitness;

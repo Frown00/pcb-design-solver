@@ -3,51 +3,65 @@ import { Chromosom, Direction, IndividualModel } from "./model";
 import * as util from "./util";
 import { IndividualView } from "./view";
 import * as types from '../../pcb/types';
+import _ from "lodash";
+import { IPenalty } from "../types";
 
 export class IndividualController {
   
-  generateRandom(maxWidth: number, maxHeight: number, connections: types.Connection[]) {
+  generateRandom(
+    maxWidth: number, 
+    maxHeight: number, 
+    connections: types.Connection[],
+    penalty: IPenalty
+  ) {
     const genotype = [];
+    const step = 1;
+    let blackList = _.flatMap(connections);
     for(let i = 0; i < connections.length; i++) {
       const conn = connections[i];
       const pointA = conn[0];
       const pointB = conn[1];
+      blackList = blackList.filter(b => b !== pointA && b !== pointB);
       const chromosom: Chromosom = {
         start: pointA,
         end: pointB,
         path: []
       }
-      let currentPoint: types.Point = { ...pointA };
+      let position: types.Point = { ...pointA };
       let direction: Direction = null;
-      let forbiddenDirections: Direction[] = mechanic.findForbiddenDirections(
-        currentPoint, 
-        { min: 0, max: maxWidth - 1}, 
-        { min: 0, max: maxHeight - 1 }
-      );
+     
       while(true) {
-        if(util.isSamePoint(currentPoint, pointB)) break;
-        direction = mechanic.randomDirection(forbiddenDirections);
-        const length = mechanic.randomLength(currentPoint, direction, maxWidth - 1, maxHeight - 1);
-        const nextPoint = mechanic.moveInDirection(currentPoint, direction, length);
+        if(util.isSamePoint(position, pointB)) break;
+        const validDirections = mechanic.validDirections({
+          point: position, 
+          lastDirection: direction, 
+          blackList, 
+          step, 
+          maxWidth, 
+          maxHeight
+        });
+        const distances = mechanic.countDistances(validDirections, position, pointB, step);
+        const nextDirection = mechanic.chooseDirection(validDirections, distances);
+        const nextPoint = mechanic.moveInDirection(position, nextDirection, step);
+        if(nextDirection === direction) {
+          chromosom.path.pop();
+        }
         chromosom.path.push(nextPoint);
-        currentPoint = nextPoint;
-        forbiddenDirections = mechanic.findForbiddenDirections(
-          currentPoint, 
-          { min: 0, max: maxWidth - 1}, 
-          { min: 0, max: maxHeight - 1 }
-        );
-        forbiddenDirections.push(direction);
-        forbiddenDirections.push(util.getOppositeDirection(direction));
+        position = nextPoint;
+        direction = nextDirection;
       }
       genotype.push(chromosom);
+      blackList.push(pointA);
+      blackList.push(pointB);
     }
     const individual = new IndividualModel().setGenotype(genotype);
-    const stats = this.countStats(genotype);
+    const stats = this.countStats(genotype, penalty);
     individual.setFitness(stats.fitness);
+    individual.setStats(stats.intersections, stats.pathLength, stats.segmentsCount);
     return individual;
   }
 
-  countStats(genotype: Chromosom[]) {
+  countStats(genotype: Chromosom[], penalty: IPenalty) {
     let pathLength = 0;
     let segmentsCount = 0;
     const intersections = mechanic.countIntersections(genotype);
@@ -62,10 +76,10 @@ export class IndividualController {
         current = segment;
       }
     }
-    // console.log('PATH LENGTH: ', pathLength);
-    // console.log('SEGMENT COUNT: ', segmentsCount);
-    // console.log('INTERSECTIONS: ', intersections);
-    const fitness = pathLength + segmentsCount * 2 + intersections * 100;
+    const path = pathLength * penalty.pathLength;
+    const segment = segmentsCount * penalty.segmentCount;
+    const intersection = intersections * penalty.intersection;
+    const fitness = path + segment + intersection;
     return { fitness, pathLength, segmentsCount, intersections };
   }
 
