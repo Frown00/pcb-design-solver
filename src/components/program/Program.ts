@@ -1,4 +1,5 @@
 import { Loader } from "../../loader/Loader";
+import { SelectionType } from "../ga/GA";
 import { IGAParams } from "../ga/types";
 import { PCB } from "../pcb/PCB";
 
@@ -18,6 +19,8 @@ export class Program {
     }
     const generations = document.getElementById('generations') as HTMLInputElement;
     const population = document.getElementById('population-size') as HTMLInputElement;
+    const selection = document.getElementById('selection-type') as HTMLInputElement;
+    const tournamentRivals = document.getElementById('tournament-rivals') as HTMLInputElement;
     const crossing = document.getElementById('crossing-prob') as HTMLInputElement;
     const mutation = document.getElementById('mutation-prob') as HTMLInputElement;
     const penaltyIntersection = document.getElementById('penalty-intersection') as HTMLInputElement;
@@ -26,6 +29,8 @@ export class Program {
     const params: IGAParams = {
       generations: isNaN(parseInt(generations.value)) ? undefined : parseInt(generations.value),
       populationSize: isNaN(parseInt(population.value)) ? undefined : parseInt(population.value),
+      selectionType: <SelectionType> selection.value,
+      tournamentRivals: isNaN(parseInt(tournamentRivals.value)) ? undefined : parseInt(tournamentRivals.value),
       crossingProb: isNaN(parseInt(crossing.value)) ? undefined : parseInt(crossing.value),
       mutationProb: isNaN(parseInt(mutation.value)) ? undefined : parseInt(mutation.value),
       penalty: {
