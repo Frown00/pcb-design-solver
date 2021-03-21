@@ -2,7 +2,7 @@ import { CircuitBoard } from "../pcb/circuitBoard/model";
 import { IndividualController } from "./individual/controller";
 import { IndividualModel } from "./individual/model";
 import { IGAParams } from "./types";
-import _, { intersection } from "lodash";
+import _ from "lodash";
 
 const defaultParams: IGAParams = {
   generations: 10,
@@ -26,7 +26,6 @@ export class GA {
     this.cboard = cboard;
     this.controller = new IndividualController();
     this.population = [];
-    console.log(params);
     this.params = _.merge(defaultParams, params);
     console.log('PARAMS', this.params);
   }
@@ -41,10 +40,11 @@ export class GA {
     const connections = this.cboard.getConnections();
     const popSize = this.params.populationSize;
     for(let i = 0; i < popSize; i++) {
-      const individual = this.controller.generateRandom(width, height, connections);
+      const individual = this.controller
+        .generateRandom(width, height, connections, this.params.penalty);
       this.population.push(individual);
       const progress = parseInt(((i + 1) / popSize * 100).toFixed(2));
-      this.repaintProgress(progress);
+      // this.repaintProgress(progress);
       console.log(progress + '%');
     }
   }
@@ -57,6 +57,7 @@ export class GA {
       }
     }
     const container = document.getElementById('circuit-board');
+    console.log(best.getStats());
     this.controller.paint(best, container);
   }
 
