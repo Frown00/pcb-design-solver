@@ -6,14 +6,40 @@
 
   </head>
   <body>
-    <select id="file-data">
-      <option>zad0</option>
-      <option>zad1</option>
-      <option>zad2</option>
-      <option>zad3</option>
-    </select>
-    <button id="load-data">Load data</button>
-    <button id="run-program">Run</button>
+    <div>
+      <section>
+        <h3>Select file</h3>
+        <select id="file-data">
+          <option>zad0</option>
+          <option>zad1</option>
+          <option>zad2</option>
+          <option>zad3</option>
+        </select>
+      </section>
+      <form class="form-params">
+        <section class="params">
+          <h3>Parameters</h3>
+          <label>Generations</label><input id="generations" type="number" />
+          <label>Population size</label><input id="population-size" type="number" />
+          <label>Crossing probability (%)</label><input id="crossing-prob" type="number" />
+          <label>Mutation probability (%)</label><input id="mutation-prob" type="number" />
+        </section>
+        <section class="params">
+          <h3>Penalty</h3>
+          <label>Intersection</label><input id="penalty-intersection" type="number" />
+          <label>Segment count</label><input id="penalty-segment-count" type="number" />
+          <label>Path length</label><input id="penalty-path-length" type="number" />
+        </section>
+      </form>
+    </div>
+    <div class="actions">
+      <button id="load-data">Load data</button>
+      <button id="run-program">Run</button>
+    </div>
+    <div id="used-params"></div>
+    <div>
+      <progress id="progress" min="0" max="100"></progress>
+    </div>
     <div id="circuit-board"></div>
     <p></p>
   </body>

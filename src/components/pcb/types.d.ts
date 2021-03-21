@@ -1,2 +1,2 @@
-type Point = { x: number, y: number };
-type Connection = [Point, Point];
+export type Point = { x: number, y: number };
+export type Connection = [Point, Point];

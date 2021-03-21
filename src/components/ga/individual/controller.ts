@@ -2,10 +2,11 @@ import * as mechanic from "./mechanic";
 import { Chromosom, Direction, IndividualModel } from "./model";
 import * as util from "./util";
 import { IndividualView } from "./view";
+import * as types from '../../pcb/types';
 
 export class IndividualController {
   
-  generateRandom(maxWidth: number, maxHeight: number, connections: Connection[]) {
+  generateRandom(maxWidth: number, maxHeight: number, connections: types.Connection[]) {
     const genotype = [];
     for(let i = 0; i < connections.length; i++) {
       const conn = connections[i];
@@ -16,60 +17,65 @@ export class IndividualController {
         end: pointB,
         path: []
       }
-      let currentPoint = { ...pointA };
-      let direction = mechanic.randomDirection([]);
+      let currentPoint: types.Point = { ...pointA };
+      let direction: Direction = null;
+      let forbiddenDirections: Direction[] = mechanic.findForbiddenDirections(
+        currentPoint, 
+        { min: 0, max: maxWidth - 1}, 
+        { min: 0, max: maxHeight - 1 }
+      );
       while(true) {
         if(util.isSamePoint(currentPoint, pointB)) break;
-        const forbidden = this.getForbiddenDirections(
+        direction = mechanic.randomDirection(forbiddenDirections);
+        const length = mechanic.randomLength(currentPoint, direction, maxWidth - 1, maxHeight - 1);
+        const nextPoint = mechanic.moveInDirection(currentPoint, direction, length);
+        chromosom.path.push(nextPoint);
+        currentPoint = nextPoint;
+        forbiddenDirections = mechanic.findForbiddenDirections(
           currentPoint, 
           { min: 0, max: maxWidth - 1}, 
           { min: 0, max: maxHeight - 1 }
         );
-        forbidden.push(util.getOppositeDirection(direction));
-        direction = mechanic.randomDirection(forbidden);
-        currentPoint = mechanic.moveInDirection(currentPoint, direction, 1);
-        let lastDirection = null;
-        if(chromosom.path.length > 0) {
-          lastDirection = chromosom.path[chromosom.path.length - 1][0];
-        }
-        if(lastDirection === direction) {
-          chromosom.path[chromosom.path.length - 1][1] += 1;
-        } else {
-          chromosom.path.push([direction, 1]);
-        }
+        forbiddenDirections.push(direction);
+        forbiddenDirections.push(util.getOppositeDirection(direction));
       }
       genotype.push(chromosom);
     }
     const individual = new IndividualModel().setGenotype(genotype);
-    const fitness = this.countFitness(genotype);
-    individual.setFitness(fitness);
+    const stats = this.countStats(genotype);
+    individual.setFitness(stats.fitness);
     return individual;
   }
 
-  countFitness(genotype: Chromosom[]) {
+  countStats(genotype: Chromosom[]) {
     let pathLength = 0;
     let segmentsCount = 0;
-    const intersections = this.countIntersections(genotype);
+    const intersections = mechanic.countIntersections(genotype);
     for(let i = 0; i < genotype.length; i++) {
       const chromosom = genotype[i];
       segmentsCount += chromosom.path.length;
+      let current = chromosom.start;
       for(let j = 0; j < chromosom.path.length; j++) {
         const segment = chromosom.path[j];
-        const len = segment[1];
+        const len = mechanic.calcDistance(current, segment);
         pathLength += len;
+        current = segment;
       }
     }
     // console.log('PATH LENGTH: ', pathLength);
     // console.log('SEGMENT COUNT: ', segmentsCount);
     // console.log('INTERSECTIONS: ', intersections);
     const fitness = pathLength + segmentsCount * 2 + intersections * 100;
-    return fitness;
+    return { fitness, pathLength, segmentsCount, intersections };
   }
 
   paint(individual: IndividualModel, container: HTMLElement) {
     const existingLines = document.getElementsByClassName('line');
+    const results = document.getElementsByClassName('fitness');
     while(existingLines.length > 0)
       existingLines[0].parentElement.removeChild(existingLines[0]);
+    while(results.length > 0)
+      results[0].parentElement.removeChild(results[0]);
     const board = document.querySelector('.board');
     const genotype = individual.getGenotype();
     const fitness = individual.getFitness();
@@ -80,45 +86,5 @@ export class IndividualController {
     container.appendChild(label);
   }
 
-
-
-  private getForbiddenDirections(
-    point: Point, 
-    x: { min: number, max: number },
-    y: { min: number, max: number }
-  ) {
-    const forbidden = [];
-    if(point.x <= x.min) forbidden.push(Direction.LEFT);
-    if(point.x >= x.max) forbidden.push(Direction.RIGHT);
-    if(point.y <= y.min) forbidden.push(Direction.UP);
-    if(point.y >= y.max) forbidden.push(Direction.DOWN);
-    return forbidden; 
-  }
-
-  private countIntersections(genotype: Chromosom[]) {
-    let points: Point[] = [];
-    for(let i = 0; i < genotype.length; i++) {
-      const chromosom = genotype[i];
-      let position = { ...chromosom.start };
-      points.push(chromosom.start);
-      for(let j = 0; j < chromosom.path.length; j++) {
-        const segment = chromosom.path[j];
-        const direction = segment[0];
-        const len = segment[1];
-        for(let m = 0; m < len; m++) {
-          position = mechanic.moveInDirection(position, direction, 1);
-          points.push({ ...position });
-        }
-      }
-    }
-    let intersections = 0;
-    while(points.length > 0) {
-      const same = points.filter(p => p.x === points[0].x && p.y === points[0].y);
-      if(same.length > 1) {
-        intersections++;
-      }
-      points = util.removePoint(points, same[0]);
-    }
-    return intersections;
-  }
+  
 }

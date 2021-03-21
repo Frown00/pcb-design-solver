@@ -1,4 +1,5 @@
 import { Loader } from "../../loader/Loader";
+import { IGAParams } from "../ga/types";
 import { PCB } from "../pcb/PCB";
 
 export class Program {
@@ -15,7 +16,25 @@ export class Program {
     if(!Program.cboard) {
       console.error("Error with circuit board");
     }
-    this.cboard.solve();
+    const generations = document.getElementById('generations') as HTMLInputElement;
+    const population = document.getElementById('population-size') as HTMLInputElement;
+    const crossing = document.getElementById('crossing-prob') as HTMLInputElement;
+    const mutation = document.getElementById('mutation-prob') as HTMLInputElement;
+    const penaltyIntersection = document.getElementById('penalty-intersection') as HTMLInputElement;
+    const penaltySegment = document.getElementById('penalty-segment-count') as HTMLInputElement;
+    const penaltyPath = document.getElementById('penalty-path-length') as HTMLInputElement;
+    const params: IGAParams = {
+      generations: isNaN(parseInt(generations.value)) ? undefined : parseInt(generations.value),
+      populationSize: isNaN(parseInt(population.value)) ? undefined : parseInt(population.value),
+      crossingProb: isNaN(parseInt(crossing.value)) ? undefined : parseInt(crossing.value),
+      mutationProb: isNaN(parseInt(mutation.value)) ? undefined : parseInt(mutation.value),
+      penalty: {
+        intersection: isNaN(parseInt(penaltyIntersection.value)) ? undefined : parseInt(penaltyIntersection.value),
+        pathLength: isNaN(parseInt(penaltyPath.value)) ? undefined : parseInt(penaltyPath.value),
+        segmentCount:isNaN(parseInt(penaltySegment.value)) ? undefined : parseInt(penaltySegment.value),
+      }
+    }
+    this.cboard.solve(params);
   }
 
 }

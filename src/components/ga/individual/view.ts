@@ -1,7 +1,8 @@
+import { Point } from "../../pcb/types";
 import { BOX_SIZE } from "../../../config/constant";
-import { moveInDirection } from "./mechanic";
-import { Chromosom, Line, Orientation } from "./model";
-import { getLine } from "./util";
+import { calcDistance } from "./mechanic";
+import { Chromosom, Direction, Orientation } from "./model";
+import { getDirection, getOrientation } from "./util";
 
 export class IndividualView {
   private container: HTMLElement;
@@ -12,47 +13,63 @@ export class IndividualView {
 
   createFitnessLabel(fitness: number) {
     const text = document.createElement('p');
+    text.classList.add("fitness");
     text.innerText = `Fitness: ${fitness}`;
     return text;
   }
 
   createConnections(genotype: Chromosom[]): HTMLDivElement[] {
     console.log('GENOTYPE:', genotype);
-    const lines = [];
+    const lines: any = [];
+    const fromTo: any[] = [];
     for(let i = 0; i < genotype.length; i++) {
       let position = { ...genotype[i].start };
       for(let j = 0; j < genotype[i].path.length; j++) {
         const segment = genotype[i].path[j];
-        const line = getLine(position, segment);
-        if(line.orientation === Orientation.VERTICAL) {
-          const lineHTML = this.createVerticalLine(BOX_SIZE, line);
+        const direction = getDirection(position, segment);
+        const orientation = getOrientation(direction);
+        const length = calcDistance(position, segment);
+        fromTo.push({ from: position, to: segment, direction, orientation, length });
+        if(orientation === Orientation.VERTICAL) {
+          const toDraw = direction === Direction.RIGHT ? position : segment;
+          const lineHTML = this.createVerticalLine(BOX_SIZE, toDraw, length);
           lines.push(lineHTML);
         } 
         else {
-          const lineHTML = this.createHorizontalLine(BOX_SIZE, line);
+          const toDraw = direction === Direction.DOWN ? position : segment;
+          const lineHTML = this.createHorizontalLine(BOX_SIZE, toDraw, length);
           lines.push(lineHTML);
         }
-        position = moveInDirection(position, segment[0], segment[1]);
+        position = segment;
       }
     }
+    console.log(fromTo);
     return lines;
   }
 
-  private createVerticalLine(boxSize: number, line: Line) {
+  private createVerticalLine(boxSize: number, point: Point, length: number) {
     const lineElem = document.createElement('div');
     lineElem.classList.add('line');
-    lineElem.style.left = (boxSize * line.x + boxSize / 2 - 1).toString() + 'px';
-    lineElem.style.top = (boxSize * line.y + boxSize / 2 - 1).toString() + 'px';
-    lineElem.style.width = (boxSize * line.len).toString() + 'px';
+    const leftNormalize = boxSize / 2 - 1;
+    const topNormalize = boxSize / 2 - 1;
+    lineElem.classList.add('x' + point.x.toString());
+    lineElem.classList.add('y' + point.y.toString());
+    lineElem.style.left = (leftNormalize + point.x * boxSize).toString() + 'px';
+    lineElem.style.top = (topNormalize + point.y * boxSize).toString() + 'px';
+    lineElem.style.width = (boxSize * length).toString() + 'px';
     return lineElem;
   }
   
-  private createHorizontalLine(boxSize: number, line: Line) {
+  private createHorizontalLine(boxSize: number, point: Point, length: number) {
     const lineElem = document.createElement('div');
     lineElem.classList.add('line');
-    lineElem.style.left = (boxSize * line.x - ((1+ line.len) * (boxSize / 2)) + boxSize - 1).toString() + 'px';
-    lineElem.style.top = (boxSize * line.y + ((1+line.len)* (boxSize / 2)) - 1).toString() + 'px';
-    lineElem.style.width = (boxSize * line.len).toString() + 'px';
+    lineElem.classList.add('x' + point.x.toString());
+    lineElem.classList.add('y' + point.y.toString());
+    const leftNormalize = -((length - 1) * boxSize / 2 + 1);
+    const topNormalize = ((length + 1) * boxSize / 2 - 1);
+    lineElem.style.left = (leftNormalize + point.x * boxSize).toString() + 'px';
+    lineElem.style.top = (topNormalize + point.y * boxSize).toString() + 'px';
+    lineElem.style.width = (boxSize * length).toString() + 'px';
     lineElem.style.transform = 'rotate(90deg)';
     return lineElem;
   }
