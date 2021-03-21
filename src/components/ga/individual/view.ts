@@ -43,7 +43,6 @@ export class IndividualView {
         position = segment;
       }
     }
-    console.log(fromTo);
     return lines;
   }
 
