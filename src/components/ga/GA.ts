@@ -63,13 +63,50 @@ export class GA {
     const stats = this.population.map(p => p.getFitness());
     report.addGeneration(1, stats);
     for(let i = 2; i <= this.params.generations; i++) {
-      // newPop = selection(this.population)
-      // crossover(newPop)
-      // mutation(newPop)
-      // this.population = newPop;
-      // report.addGeneration(i, stats);
+      this.selection();
+      this.crossover();
+      this.mutation();
+      const stats = this.population.map(p => p.getFitness());
+      report.addGeneration(i, stats)
     }
     console.log(report);
+  }
+
+  private selection() {
+    if(this.params.selectionType === SelectionType.ROULETTE) {
+      // roulette
+    }
+    // tournament
+  }
+
+  private crossover() {
+    const chance = this.params.crossingProb / 100;
+    const popSize = this.params.populationSize;
+    const newPopulation: IndividualModel[] = [];
+    while(newPopulation.length < popSize) {
+      const parent1: IndividualModel = null;
+      const parent2: IndividualModel = null;
+      const lottery = Math.random();
+      if(lottery < chance) {
+        // const child1 = cross(parent1, parent2);
+        // newPopulation.push()
+      } else {
+        // newPopulation.push(parent1)
+      }
+    }
+    // this.population = newPopulation;
+  }
+
+  private mutation() {
+    const chance = this.params.mutationProb / 100;
+    for(let i = 0; i < this.population.length; i++) {
+      const individual: IndividualModel = this.population[i];
+      const lottery = Math.random();
+      if(lottery < chance) {
+        // const newGenotype = mechanic.mutation(individual.getGenotype());
+        // individual.setGenotype(newGenotype);
+      }
+    }
   }
 
   paint() {
