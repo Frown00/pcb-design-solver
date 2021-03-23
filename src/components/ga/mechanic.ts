@@ -53,6 +53,11 @@ export function crossover(parent1: IndividualModel, parent2: IndividualModel): I
 
 export function mutation(genotype: Chromosom[], maxWidth: number, maxHeight: number) {
   const newGenotype: Chromosom[] = [];
-
+  const chromosomId = Math.floor(Math.random() * genotype.length);
+  const path = genotype[chromosomId].path;
+  const pathId = Math.floor(Math.random() * path.length - 1);
+  const point = path[pathId];
+  const nextPoint = path[pathId + 1];
+   
   return newGenotype;
 }

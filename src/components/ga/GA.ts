@@ -112,7 +112,7 @@ export class GA {
       const individual: IndividualModel = this.population[i];
       const lottery = Math.random();
       if(lottery < chance) {
-        const newGenotype = mechanic.mutation(individual.getGenotype());
+        const newGenotype = mechanic.mutation(individual.getGenotype(), width, height);
         individual.setGenotype(newGenotype);
       }
     }
