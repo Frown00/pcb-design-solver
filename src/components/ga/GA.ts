@@ -4,6 +4,7 @@ import { IndividualModel } from "./individual/model";
 import { IGAParams } from "./types";
 import _ from "lodash";
 import { Report } from "./report/report";
+import * as mechanic from "./mechanic";
 
 export enum SelectionType {
   TOURNAMENT = 'tournament',
@@ -74,9 +75,10 @@ export class GA {
 
   private selection() {
     if(this.params.selectionType === SelectionType.ROULETTE) {
-      // roulette
+       this.population = mechanic.tournament(this.population, this.params.tournamentRivals);
+       return;
     }
-    // tournament
+    this.population = mechanic.tournament(this.population, this.params.tournamentRivals);
   }
 
   private crossover() {
@@ -84,27 +86,34 @@ export class GA {
     const popSize = this.params.populationSize;
     const newPopulation: IndividualModel[] = [];
     while(newPopulation.length < popSize) {
-      const parent1: IndividualModel = null;
-      const parent2: IndividualModel = null;
+      const id1 = Math.floor(Math.random() * popSize);
+      let id2 = id1;
+      while(id1 === id2) {
+        id2 = Math.floor(Math.random() * popSize);
+      }
+      const parent1: IndividualModel = this.population[id1];
+      const parent2: IndividualModel = this.population[id2];
       const lottery = Math.random();
       if(lottery < chance) {
-        // const child1 = cross(parent1, parent2);
-        // newPopulation.push()
+        const child = mechanic.crossover(parent1, parent2);
+        newPopulation.push(child);
       } else {
-        // newPopulation.push(parent1)
+        newPopulation.push(parent1)
       }
     }
-    // this.population = newPopulation;
+    this.population = newPopulation;
   }
 
   private mutation() {
     const chance = this.params.mutationProb / 100;
+    const width = this.cboard.getWidth();
+    const height = this.cboard.getHeight();
     for(let i = 0; i < this.population.length; i++) {
       const individual: IndividualModel = this.population[i];
       const lottery = Math.random();
       if(lottery < chance) {
-        // const newGenotype = mechanic.mutation(individual.getGenotype());
-        // individual.setGenotype(newGenotype);
+        const newGenotype = mechanic.mutation(individual.getGenotype());
+        individual.setGenotype(newGenotype);
       }
     }
   }
