@@ -3,7 +3,7 @@ import { IndividualController } from "./individual/controller";
 import { IndividualModel } from "./individual/model";
 import { IGAParams } from "./types";
 import _ from "lodash";
-import { Report } from "./report/report";
+import { Report } from "./report/Report";
 import * as mechanic from "./mechanic";
 
 export enum SelectionType {
@@ -55,6 +55,7 @@ export class GA {
       this.population.push(individual);
     }
     this.bestSolution = this.population[0];
+    this.findNewBest();
     return this.population;
   }
 
