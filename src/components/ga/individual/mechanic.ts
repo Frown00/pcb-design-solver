@@ -98,13 +98,15 @@ export function countIntersections(genotype: Chromosom[]) {
     points.push(chromosom.start);
     for(let j = 0; j < chromosom.path.length; j++) {
       const segment = chromosom.path[j];
-      const direction = util.getDirection(position, segment);
-      const orientation = util.getOrientation(direction);
-      const length = orientation === Orientation.HORIZONTAL ? 
-        Math.abs(position.y - segment.y) : Math.abs(position.x - segment.x);
-      for(let m = 0; m < length; m++) {
-        position = moveInDirection(position, direction, 1);
-        points.push({ ...position });
+      if(!util.isSamePoint(position, segment)) {
+        const direction = util.getDirection(position, segment);
+        const orientation = util.getOrientation(direction);
+        const length = orientation === Orientation.HORIZONTAL ? 
+          Math.abs(position.y - segment.y) : Math.abs(position.x - segment.x);
+        for(let m = 0; m < length; m++) {
+          position = moveInDirection(position, direction, 1);
+          points.push({ ...position });
+        }
       }
     }
   }
