@@ -30,7 +30,7 @@ export class GA {
   private cboard: CircuitBoard;
   private controller: IndividualController;
   private population: IndividualModel[];
-  private bestSolution: IndividualModel[];
+  private bestSolution: IndividualModel;
 
   constructor(cboard: CircuitBoard, params: IGAParams) {
     this.cboard = cboard;
@@ -53,10 +53,8 @@ export class GA {
       const individual = this.controller
         .generateRandom(width, height, connections, this.params.penalty);
       this.population.push(individual);
-      const progress = parseInt(((i + 1) / popSize * 100).toFixed(2));
-      // this.repaintProgress(progress);
-      console.log(progress + '%');
     }
+    this.bestSolution = this.population[0];
     return this.population;
   }
 
@@ -64,18 +62,23 @@ export class GA {
     const stats = this.population.map(p => p.getFitness());
     report.addGeneration(1, stats);
     for(let i = 2; i <= this.params.generations; i++) {
+      const progress = parseInt((i / this.params.generations * 100).toFixed(2));
+      // this.repaintProgress(progress);
+      console.log(progress + '%');
       this.selection();
       this.crossover();
       this.mutation();
+      this.evaluate();
+      this.findNewBest();
       const stats = this.population.map(p => p.getFitness());
-      report.addGeneration(i, stats)
+      report.addGeneration(i, stats);
     }
     console.log(report);
   }
 
   private selection() {
     if(this.params.selectionType === SelectionType.ROULETTE) {
-       this.population = mechanic.tournament(this.population, this.params.tournamentRivals);
+       this.population = mechanic.roulette(this.population);
        return;
     }
     this.population = mechanic.tournament(this.population, this.params.tournamentRivals);
@@ -109,7 +112,7 @@ export class GA {
     const width = this.cboard.getWidth();
     const height = this.cboard.getHeight();
     for(let i = 0; i < this.population.length; i++) {
-      const individual: IndividualModel = this.population[i];
+      const individual = this.population[i];
       const lottery = Math.random();
       if(lottery < chance) {
         const newGenotype = mechanic.mutation(individual.getGenotype(), width, height);
@@ -118,16 +121,28 @@ export class GA {
     }
   }
 
-  paint() {
-    let best = this.population[0];
-    for(let i = 1; i < this.population.length; i++) {
-      if(this.population[i].getFitness() < best.getFitness()) {
-        best = this.population[i];
+  private evaluate() {
+    for(let i = 0; i < this.population.length; i++) {
+      const individual = this.population[i];
+      const stats = this.controller.countStats(individual.getGenotype(), this.params.penalty);
+      individual.setFitness(stats.fitness);
+      individual.setStats(stats.intersections, stats.pathLength, stats.segmentsCount);
+    }
+  }
+
+  private findNewBest() {
+    for(let i = 0; i < this.population.length; i++) {
+      const individual = this.population[i];
+      if(individual.getFitness() < this.bestSolution.getFitness()) {
+        this.bestSolution = individual;
       }
     }
+  }
+
+  paint() {
     const container = document.getElementById('circuit-board');
-    console.log(best.getStats());
-    this.controller.paint(best, container);
+    console.log(this.bestSolution.getStats());
+    this.controller.paint(this.bestSolution, container);
   }
 
   paintParams() {
