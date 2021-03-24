@@ -1,5 +1,7 @@
-import { Chromosom, IndividualModel } from "./individual/model";
-import { randomWeighted } from "./individual/util";
+import { Point } from "../pcb/types";
+import { Chromosom, IndividualModel, Orientation } from "./individual/model";
+import { getDirection, getOrientation, isSamePoint, randomWeighted } from "./individual/util";
+import _ from "lodash";
 
 export function tournament(population: IndividualModel[], rivalsCount: number): IndividualModel[] {
   const newPopulation = [];
@@ -17,7 +19,7 @@ export function tournament(population: IndividualModel[], rivalsCount: number): 
         best = rivals[i];
       }
     }
-    newPopulation.push(best);
+    newPopulation.push(_.cloneDeep(best));
   }
   return newPopulation;
 }
@@ -29,7 +31,7 @@ export function roulette(population: IndividualModel[]) {
   const size = population.length;
   while(newPopulation.length < size) {
     const index = randomWeighted(weights);
-    newPopulation.push(population[index]);
+    newPopulation.push(_.cloneDeep(population[index]));
   }
   return newPopulation;
 }
@@ -47,17 +49,95 @@ export function crossover(parent1: IndividualModel, parent2: IndividualModel): I
       newGenotype.push(genotype2[i]);
     }
   }
-  child.setGenotype(newGenotype);
+  child.setGenotype(_.cloneDeep(newGenotype));
   return child;
 }
 
 export function mutation(genotype: Chromosom[], maxWidth: number, maxHeight: number) {
-  const newGenotype: Chromosom[] = [];
   const chromosomId = Math.floor(Math.random() * genotype.length);
-  const path = genotype[chromosomId].path;
-  const pathId = Math.floor(Math.random() * path.length - 1);
-  const point = path[pathId];
-  const nextPoint = path[pathId + 1];
-   
+  const newGenotype = _.cloneDeep(genotype);
+  const path = newGenotype[chromosomId].path;
+  if(path.length < 4) return newGenotype;
+  const pathId = _.random(0, path.length - 4);
+  const joint = path[pathId];
+  let movingPoint = path[pathId + 1];
+  let nextMovingPoint = path[pathId + 2];
+  const joint2 = path[pathId + 3];
+  const direction = getDirection(joint, movingPoint);
+  const orientation = getOrientation(direction);
+  const { min, max } = getMinMaxMove(movingPoint, orientation, maxHeight, maxWidth);
+  const change = _.random(min, max);
+  movingPoint = mutationMove(movingPoint, orientation, change);
+  nextMovingPoint = mutationMove(nextMovingPoint, orientation, change);
+  fixMove(joint, movingPoint, nextMovingPoint, orientation);
+  fixMove(joint2, nextMovingPoint, movingPoint, orientation);
+  path[pathId + 1] = movingPoint;
+  path[pathId + 2] = nextMovingPoint;
+  fixPath(path);
   return newGenotype;
+}
+
+function getMinMaxMove(point: Point, orientation: Orientation, maxHeight: number, maxWidth: number) {
+  if(orientation === Orientation.HORIZONTAL) {
+    return {
+      min: -point.y,
+      max: (maxHeight - 1) - point.y
+    }
+  }
+  if(orientation === Orientation.VERTICAL) {
+    return {
+      min: -point.x,
+      max: (maxWidth - 1) - point.x
+    }
+  }
+}
+
+function mutationMove(point: Point, orientation: Orientation, move: number) {
+  const { x, y } = point;
+  if(orientation === Orientation.HORIZONTAL) 
+    return { 
+      x, y: y + move 
+    };
+  if(orientation === Orientation.VERTICAL) 
+    return { 
+      x: x + move, y
+    };
+}
+
+function fixPath(path: Point[]) {
+  for(let i = 0; i < path.length - 1; i++) {
+    const p1 = path[i];
+    const p2 = path[i+1];
+    if(isSamePoint(p1, p2)) {
+      path.splice(i, 1);
+    }
+  }
+}
+
+function fixMove(
+  joint: Point, 
+  movingPoint: Point,
+  nextMovingPoint: Point, 
+  orientation: Orientation
+) {
+  if(isSamePoint(joint, movingPoint)) {
+    if(orientation === Orientation.HORIZONTAL) {
+      if(joint.y === 0) {
+        movingPoint.y++;
+        nextMovingPoint.y++;
+      } else {
+        movingPoint.y--;
+        nextMovingPoint.y--;
+      }
+    }
+    if(orientation === Orientation.VERTICAL) {
+      if(joint.x === 0) {
+        movingPoint.x++;
+        nextMovingPoint.x++;
+      } else {
+        movingPoint.x--;
+        nextMovingPoint.x--;
+      }
+    }
+  }
 }

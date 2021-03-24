@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import { Chromosom, IndividualModel } from './individual/model';
 import { log } from './individual/util';
 import * as mechanic from './mechanic';
+import _ from "lodash";
 
 describe('Mechanic', () => {
   describe('tournament()', () => {
@@ -87,33 +88,31 @@ describe('Mechanic', () => {
     });
   });
 
-  describe('crossover()', () => {
+  describe('mutation()', () => {
     it('should return new child', () => {
       // Given
       const g1: Chromosom[] = [
         {
-          start: {x: 0, y: 0}, 
-          end: {x: 0, y: 1}, 
-          path: [{x: 0, y: 2}, {x: 0, y: 1}]
-        },
-        {
           start: {x: 1, y: 1}, 
           end: {x: 2, y: 1}, 
-          path: [{x: 0, y: 2}, {x: 2, y: 1}]
-        },
-        {
-          start: {x: 3, y: 4}, 
-          end: {x: 4, y: 1}, 
-          path: [{x: 0, y: 2},  {x: 4, y: 1}]
+          path: [{x: 0, y: 2}, {x: 3, y: 2}, {x: 3, y: 5}, {x: 0, y: 5}, {x: 0, y: 1}]
         },
       ];
-      const maxWidth = 6;
-      const maxHeight = 6;
+      const len = g1[0].path.length;
+      const maxWidth = 10;
+      const maxHeight = 10;
       // When
-      const newGenotype = mechanic.mutation(g1, maxWidth, maxHeight);
+      mechanic.mutation(g1, maxWidth, maxHeight);
       // Then
-      log(newGenotype);
-      // expect(child.getGenotype().length).to.be.equal(g1.length);
+      // log(g1);
+      expect(g1[0].path.length).to.be.equal(len);
+      for(let i = 0; i < g1[0].path.length; i++) {
+        const point = g1[0].path[i];
+        expect(point.x).to.be.lessThan(maxWidth);
+        expect(point.x).to.be.greaterThan(-1);
+        expect(point.y).to.be.lessThan(maxHeight);
+        expect(point.y).to.be.greaterThan(-1);
+      }
     });
   });
 });
