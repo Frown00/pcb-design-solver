@@ -3,9 +3,18 @@ import { IndividualController } from "./individual/controller";
 import { IndividualModel } from "./individual/model";
 import { IGAParams } from "./types";
 import _ from "lodash";
+import { Report } from "./report/report";
+import * as mechanic from "./mechanic";
+
+export enum SelectionType {
+  TOURNAMENT = 'tournament',
+  ROULETTE = 'roulette'
+}
 
 const defaultParams: IGAParams = {
   generations: 10,
+  selectionType: SelectionType.TOURNAMENT,
+  tournamentRivals: 5,
   populationSize: 100,
   crossingProb: 50,
   mutationProb: 50,
@@ -21,6 +30,7 @@ export class GA {
   private cboard: CircuitBoard;
   private controller: IndividualController;
   private population: IndividualModel[];
+  private bestSolution: IndividualModel;
 
   constructor(cboard: CircuitBoard, params: IGAParams) {
     this.cboard = cboard;
@@ -43,22 +53,96 @@ export class GA {
       const individual = this.controller
         .generateRandom(width, height, connections, this.params.penalty);
       this.population.push(individual);
-      const progress = parseInt(((i + 1) / popSize * 100).toFixed(2));
+    }
+    this.bestSolution = this.population[0];
+    return this.population;
+  }
+
+  evolve(report: Report) {
+    const stats = this.population.map(p => p.getFitness());
+    report.addGeneration(1, stats);
+    for(let i = 2; i <= this.params.generations; i++) {
+      const progress = parseInt((i / this.params.generations * 100).toFixed(2));
       // this.repaintProgress(progress);
       console.log(progress + '%');
+      this.selection();
+      this.crossover();
+      this.mutation();
+      this.evaluate();
+      this.findNewBest();
+      const stats = this.population.map(p => p.getFitness());
+      report.addGeneration(i, stats);
+    }
+    console.log(report);
+  }
+
+  private selection() {
+    if(this.params.selectionType === SelectionType.ROULETTE) {
+       this.population = mechanic.roulette(this.population);
+       return;
+    }
+    this.population = mechanic.tournament(this.population, this.params.tournamentRivals);
+  }
+
+  private crossover() {
+    const chance = this.params.crossingProb / 100;
+    const popSize = this.params.populationSize;
+    const newPopulation: IndividualModel[] = [];
+    while(newPopulation.length < popSize) {
+      const id1 = Math.floor(Math.random() * popSize);
+      let id2 = id1;
+      while(id1 === id2) {
+        id2 = Math.floor(Math.random() * popSize);
+      }
+      const parent1: IndividualModel = this.population[id1];
+      const parent2: IndividualModel = this.population[id2];
+      const lottery = Math.random();
+      if(lottery < chance) {
+        const child = mechanic.crossover(parent1, parent2);
+        newPopulation.push(child);
+      } else {
+        newPopulation.push(parent1)
+      }
+    }
+    this.population = newPopulation;
+  }
+
+  private mutation() {
+    const chance = this.params.mutationProb / 100;
+    const width = this.cboard.getWidth();
+    const height = this.cboard.getHeight();
+    for(let i = 0; i < this.population.length; i++) {
+      const individual = this.population[i];
+      const lottery = Math.random();
+      if(lottery < chance) {
+        const newGenotype = mechanic.mutation(individual.getGenotype(), width, height);
+        individual.setGenotype(newGenotype);
+      }
+    }
+  }
+
+  private evaluate() {
+    for(let i = 0; i < this.population.length; i++) {
+      const individual = this.population[i];
+      const stats = this.controller.countStats(individual.getGenotype(), this.params.penalty);
+      individual.setFitness(stats.fitness);
+      individual.setStats(stats.intersections, stats.pathLength, stats.segmentsCount);
+    }
+  }
+
+  private findNewBest() {
+    for(let i = 0; i < this.population.length; i++) {
+      const individual = this.population[i];
+      if(individual.getFitness() < this.bestSolution.getFitness()) {
+        this.bestSolution = individual;
+      }
     }
   }
 
   paint() {
-    let best = this.population[0];
-    for(let i = 1; i < this.population.length; i++) {
-      if(this.population[i].getFitness() < best.getFitness()) {
-        best = this.population[i];
-      }
-    }
     const container = document.getElementById('circuit-board');
-    console.log(best.getStats());
-    this.controller.paint(best, container);
+    console.log(this.bestSolution.getStats());
+    this.controller.paint(this.bestSolution, container);
   }
 
   paintParams() {
@@ -75,6 +159,8 @@ export class GA {
     d1.appendChild(main);
     d1.innerHTML+= `<label>Generations</label><span>${this.params.generations}</span>
       <label>Population size</label><span>${this.params.populationSize}</span>
+      <label>Selection type</label><span>${this.params.selectionType}</span>
+      <label>Tournament Rivals</label><span>${this.params.tournamentRivals}</span>
       <label>Crossing prob.</label><span>${this.params.crossingProb}%</span>
       <label>Mutation prob.</label><span>${this.params.mutationProb}%</span>
     `
