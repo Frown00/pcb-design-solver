@@ -1,3 +1,5 @@
+import { SelectionType } from "./GA";
+
 export interface IPenalty {
   intersection: number, 
   segmentCount: number, 
@@ -7,6 +9,8 @@ export interface IPenalty {
 export interface IGAParams {
   generations?: number, 
   populationSize?: number, 
+  selectionType?: SelectionType,
+  tournamentRivals?: number,
   crossingProb?: number, 
   mutationProb?: number, 
   penalty?: IPenalty

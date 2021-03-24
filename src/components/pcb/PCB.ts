@@ -1,4 +1,5 @@
 import { GA } from "../ga/GA";
+import { Report } from "../ga/report/report";
 import { IGAParams } from "../ga/types";
 import { CircuitBoardController } from "./circuitBoard/controller";
 import { CircuitBoard } from "./circuitBoard/model";
@@ -27,8 +28,12 @@ export class PCB {
     const progress = document.getElementById('progress') as HTMLProgressElement;
     progress.value = 0;
     const ga = new GA(this.circuitBoard, params);
+    const report = new Report();
     ga.paintParams();
     ga.createPopulation();
+    ga.evolve(report);
+    console.log(report);
+    report.writeToCSV(ga.getParams());
     ga.paint();
   }
 }

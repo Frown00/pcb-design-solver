@@ -56,7 +56,7 @@ export function getDirection(p1: types.Point, p2: types.Point): Direction {
   if(p2.x > p1.x) return Direction.RIGHT;
   if(p2.y > p1.y) return Direction.DOWN;
   if(p2.y < p1.y) return Direction.UP;
-  throw Error('ERROR in getDirection => p1 and p2 are same');
+  throw Error(`ERROR in getDirection => ${p1.x, p1.y} and ${p2.x, p2.y} are same`);
 }
 
 export function getOrientation(direction: Direction) {
