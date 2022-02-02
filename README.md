@@ -13,7 +13,7 @@ The problem is to design a network of physical connections such that any two sol
 ## Preview
 <img src="https://github.com/Frown00/pcb-design-solver/blob/master/assets/Animation.gif?raw=true" width="450">
 
-## Saving
+## Data
 Each run is saved in "results" folder as csv file with name based on used config
 
 ### Example
